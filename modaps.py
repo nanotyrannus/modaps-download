@@ -122,21 +122,25 @@ elif (args_obj.mode == 'search'):
 
     
 elif (args_obj.mode == 'download'):
-    if (args_obj.output == ''):
-        file_name = "{}.hdf".format(time.strftime("%Y%m%d_%H_%M_%S"))
-    else :
-        file_name = args_obj.output
-    print("file_name is {}".format(file_name))
+
     fileIds = args_obj.pid
-    print("Downloading product {} into {}".format(args_obj.pid, file_name))
 
     # Get url of file of corresponding file ID
     url = "http://modwebsrv.modaps.eosdis.nasa.gov/axis2/services/MODAPSservices/getFileUrls?fileIds={}".format(fileIds)
 
     response_obj = getResponseDict(url)
-
     fileFtp = response_obj['mws:getFileUrlsResponse']['return']
 
+    if (args_obj.output == ''):
+        file_name = fileFtp.split("/")[-1] 
+    else :
+        file_name = args_obj.output + "." +fileFtp.split("/")[-1].split(".")[-1] # Append file extension
+
+    print("file_name is {}".format(file_name))
+    print("Downloading product {} into {}".format(args_obj.pid, file_name))
+    
+
+    print("File URL: {}".format(fileFtp))
     with request.urlopen(fileFtp) as response, open(file_name, 'wb') as out_file:
         data = response.read() 
         out_file.write(data)
