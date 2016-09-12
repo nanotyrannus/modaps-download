@@ -65,6 +65,9 @@ parser.add_argument('-o', '--output', type=str, default="", help=(
 parser.add_argument('--pid', type=str, help=(
     "Comma delimited list of file IDs to download."
 ))
+parser.add_argument('--progress', '-b', type=bool, default=True, help=(
+    "Displays progress bar if True. Default is True."
+))
 
 args_obj = parser.parse_args()
 
@@ -142,7 +145,22 @@ elif (args_obj.mode == 'download'):
 
     print("File URL: {}".format(fileFtp))
     with request.urlopen(fileFtp) as response, open(file_name, 'wb') as out_file:
-        data = response.read() 
-        out_file.write(data)
+        # data = response.read()
+        # print(response.info()['Content-length'])
+        total_size = response.info()['Content-Length'].strip()
+        total_size = int(total_size)
+        bytes_so_far = 0
+
+        while True:
+            chunk = response.read(8192)
+            bytes_so_far += len(chunk)
+
+            if not chunk:
+                break
+            else:
+                out_file.write(chunk)
+                if (args_obj.progress):
+                    print("Downloaded {:6.2f}%".format((bytes_so_far/total_size) * 100), end="\r")
+
     
-print("Done.")
+print("\nDone.")
